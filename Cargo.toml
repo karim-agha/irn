@@ -1,0 +1,41 @@
+[package]
+name = "irn"
+version = "0.1.0"
+edition = "2021"
+description = "Inter-Relay Network"
+
+[dependencies]
+bs58 = "0.4"
+rand = "0.8"
+anyhow = "1.0"
+futures = "0.3"
+thiserror = "1.0"
+shellexpand = "2.1.2"
+bincode = "1.3.3"
+zstd = "0.5.4"
+prost = "0.10"
+dashmap = "5.1"
+sled = { version = "0.34", features = ["compression"] }
+asynchronous-codec = "0.6"
+unsigned-varint = { version = "0.7.0", features = ["asynchronous_codec"] }
+tokio = { version = "1.15", features = ["full"] }
+clap = { version = "3.2.17", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde_json = "1.0.85"
+serde = { version = "1", features = ["derive"] }
+ed25519-dalek = { version = "1", features = [
+  "default",
+  "serde",
+  "u64_backend",
+] }
+libp2p = { version = "0.47.0", default-features = false, features = [
+  "yamux",
+  "noise",
+  "secp256k1",
+  "dns-async-std",
+  "tcp-async-io",
+] }
+
+[build-dependencies]
+prost-build = "0.10"

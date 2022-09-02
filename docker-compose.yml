@@ -1,0 +1,289 @@
+version: '2.1'
+
+networks:
+  irn_test_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.40.1.0/24
+
+services:
+  node_0:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1
+    networks:
+      irn_test_net:
+        ipv4_address: 172.40.1.2
+
+  node_1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668 --rpc 8080
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+    ports:
+      - "8080:8080"
+
+  node_5:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668 --rpc 8080
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+    ports:
+      - "8081:8080"
+
+  node_6:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_7:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_8:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_9:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_10:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_11:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_12:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_13:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_14:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_15:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_16:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_17:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668 -v
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_18:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
+  node_19:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - RUST_BACKTRACE=1
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668
+    depends_on:
+      node_0:
+        condition: service_started
+    networks:
+      irn_test_net:
+
+
