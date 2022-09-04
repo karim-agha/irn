@@ -15,8 +15,8 @@ pub struct CliOpts {
   pub network_id: String,
 
   #[clap(
-    short, 
-    long, 
+    short,
+    long,
     default_value_t = Keypair::unique(),
     help = "specifies a static secret key of the node account")]
   pub secret: Keypair,

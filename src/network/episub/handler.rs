@@ -1,24 +1,36 @@
-use super::{
-  codec::EpisubCodec, error::EpisubHandlerError, connection::EpisubConnection, rpc,
+use {
+  super::{
+    codec::EpisubCodec,
+    connection::EpisubConnection,
+    error::EpisubHandlerError,
+    rpc,
+  },
+  asynchronous_codec::Framed,
+  futures::{Sink, StreamExt},
+  libp2p::{
+    core::{InboundUpgrade, OutboundUpgrade},
+    swarm::{
+      ConnectionHandler,
+      ConnectionHandlerEvent,
+      ConnectionHandlerUpgrErr,
+      KeepAlive,
+      NegotiatedSubstream,
+      SubstreamProtocol,
+    },
+  },
+  std::{
+    collections::VecDeque,
+    io,
+    pin::Pin,
+    task::{Context, Poll},
+  },
+  tracing::{error, warn},
 };
-use asynchronous_codec::Framed;
-use futures::{Sink, StreamExt};
-use libp2p::core::{InboundUpgrade, OutboundUpgrade};
-use libp2p::swarm::{
-  KeepAlive, NegotiatedSubstream, ConnectionHandler, ConnectionHandlerEvent,
-  ConnectionHandlerUpgrErr, SubstreamProtocol,
-};
-use std::{
-  collections::VecDeque,
-  io,
-  pin::Pin,
-  task::{Context, Poll},
-};
-use tracing::{error, warn};
 
 /// State of the inbound substream, opened either by us or by the remote.
 enum InboundSubstreamState {
-  /// Waiting for a message from the remote. The idle state for an inbound substream.
+  /// Waiting for a message from the remote. The idle state for an inbound
+  /// substream.
   WaitingInput(Framed<NegotiatedSubstream, EpisubCodec>),
   /// The substream is being closed.
   Closing(Framed<NegotiatedSubstream, EpisubCodec>),
@@ -30,7 +42,8 @@ enum InboundSubstreamState {
 enum OutboundSubstreamState {
   // upgrade requested and waiting for the upgrade to be negotiated.
   SubstreamRequested,
-  /// Waiting for the user to send a message. The idle state for an outbound substream.
+  /// Waiting for the user to send a message. The idle state for an outbound
+  /// substream.
   WaitingOutput(Framed<NegotiatedSubstream, EpisubCodec>),
   /// Waiting to send a message to the remote.
   PendingSend(Framed<NegotiatedSubstream, EpisubCodec>, super::rpc::Rpc),
@@ -51,7 +64,8 @@ pub struct EpisubHandler {
   /// The single long-lived inbound substream.
   inbound_substream: Option<InboundSubstreamState>,
   /// Whether we want the peer to have strong live connection to us.
-  /// This changes when a peer is moved from the active view to the passive view.
+  /// This changes when a peer is moved from the active view to the passive
+  /// view.
   keep_alive: KeepAlive,
   /// The list of messages scheduled to be sent to this peer
   outbound_queue: VecDeque<rpc::Rpc>,
@@ -84,11 +98,11 @@ impl EpisubHandler {
 }
 
 impl ConnectionHandler for EpisubHandler {
-  type InEvent = rpc::Rpc;
-  type OutEvent = rpc::Rpc;
   type Error = EpisubHandlerError;
+  type InEvent = rpc::Rpc;
   type InboundOpenInfo = ();
   type InboundProtocol = EpisubConnection;
+  type OutEvent = rpc::Rpc;
   type OutboundOpenInfo = ();
   type OutboundProtocol = EpisubConnection;
 
@@ -202,9 +216,9 @@ impl EpisubHandler {
           match Sink::poll_close(Pin::new(&mut substream), cx) {
             Poll::Ready(res) => {
               if let Err(e) = res {
-                // Don't close the connection but just drop the inbound substream.
-                // In case the remote has more to send, they will open up a new
-                // substream.
+                // Don't close the connection but just drop the inbound
+                // substream. In case the remote has more to
+                // send, they will open up a new substream.
                 warn!("Inbound substream error while closing: {:?}", e);
               }
               self.inbound_substream = None;
@@ -261,7 +275,10 @@ impl EpisubHandler {
                     Some(OutboundSubstreamState::PendingFlush(substream));
                 }
                 Err(EpisubHandlerError::MaxTransmissionSize) => {
-                  error!("Message exceeds the maximum transmission size and was dropped.");
+                  error!(
+                    "Message exceeds the maximum transmission size and was \
+                     dropped."
+                  );
                   self.outbound_substream =
                     Some(OutboundSubstreamState::WaitingOutput(substream));
                 }

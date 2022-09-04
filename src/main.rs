@@ -1,11 +1,11 @@
-use rpc::RpcService;
-use storage::PersistentStorage;
-
 use {
+  crate::optstream::OptionalStreamExt,
   clap::Parser,
   cli::CliOpts,
   network::{Network, NetworkEvent},
-  tracing::{info, Level},
+  rpc::RpcService,
+  storage::PersistentStorage,
+  tracing::{debug, info, Level},
   tracing_subscriber::{filter::filter_fn, prelude::*},
 };
 
@@ -82,9 +82,9 @@ async fn main() -> anyhow::Result<()> {
   let storage = PersistentStorage::new(opts.data_dir()?)?;
 
   // for nodes that expose an external WS rpc service
-  let mut apisvc = opts.rpc_endpoints().map(|addrs| {
-    Box::new(RpcService::new(addrs, storage))
-  });
+  let mut apisvc = opts
+    .rpc_endpoints()
+    .map(|addrs| RpcService::new(addrs, storage, opts.identity()));
 
   loop {
     tokio::select! {
@@ -103,7 +103,9 @@ async fn main() -> anyhow::Result<()> {
       // optional services:
 
       // RPC WebSocket API
-      
+      Some(()) = apisvc.next() => {
+        debug!("RpcService triggered an event");
+      }
     }
   }
 }

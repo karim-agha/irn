@@ -119,13 +119,13 @@ impl Config {
       as usize
   }
 
-  /// A node is considered starving when it's active view size is less than 
-  /// this value. It will try to maintain half of `max_active_view_size` to 
-  /// achieve minimum level of connection redundancy, another half is reserved 
+  /// A node is considered starving when it's active view size is less than
+  /// this value. It will try to maintain half of `max_active_view_size` to
+  /// achieve minimum level of connection redundancy, another half is reserved
   /// for peering connections from other nodes.
-  /// 
-  /// Two thresholds allow to avoid cyclical connections and disconnections when new
-  /// nodes are connected to a group of overconnected nodes.
+  ///
+  /// Two thresholds allow to avoid cyclical connections and disconnections when
+  /// new nodes are connected to a group of overconnected nodes.
   pub fn min_active_view_size(&self) -> usize {
     self.max_active_view_size().div_euclid(2).max(1)
   }
