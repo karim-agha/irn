@@ -71,7 +71,7 @@ impl RpcService {
 async fn serve_info(
   Extension(state): Extension<Arc<ServiceSharedState>>,
 ) -> impl IntoResponse {
-  println!("serving info");
+  debug!("Serving info");
   ErasedJson::pretty(json!({
     "version": env!("VERGEN_GIT_SEMVER"),
     "identity": state.identity,
