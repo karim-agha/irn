@@ -1,5 +1,5 @@
 use {
-  crate::keys::{Keypair, Pubkey},
+  crate::primitives::{Keypair, Pubkey},
   clap::Parser,
   libp2p::{multiaddr::Protocol, Multiaddr},
   std::{

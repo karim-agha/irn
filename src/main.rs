@@ -1,22 +1,20 @@
 use {
-  crate::optstream::OptionalStreamExt,
+  crate::{optstream::OptionalStreamExt, rpc::RpcEvent},
   clap::Parser,
   cli::CliOpts,
   network::{Network, NetworkEvent},
   rpc::RpcService,
   storage::PersistentStorage,
-  tracing::{debug, info, Level},
+  tracing::{info, Level},
   tracing_subscriber::{filter::filter_fn, prelude::*},
 };
 
 mod cli;
-mod keys;
-mod message;
 mod network;
 mod optstream;
+mod primitives;
 mod rpc;
 mod storage;
-mod subscription;
 
 fn print_essentials(opts: &CliOpts) -> anyhow::Result<()> {
   info!("Starting WalletConnect Inter-Relay Network node");
@@ -103,8 +101,17 @@ async fn main() -> anyhow::Result<()> {
       // optional services:
 
       // RPC WebSocket API
-      Some(()) = apisvc.next() => {
-        debug!("RpcService triggered an event");
+      Some(event) = apisvc.next() => {
+        match event {
+          RpcEvent::Message(msg) => {
+            info!("rpc-event message: {msg:?}");
+            network.gossip_message(msg)?;
+          }
+          RpcEvent::Subscription(sub) => {
+            info!("rpc-event subscription: {sub:?}");
+            network.gossip_subscription(sub)?;
+          }
+        }
       }
     }
   }

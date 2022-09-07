@@ -29,14 +29,6 @@ impl AsRef<[u8]> for Pubkey {
   }
 }
 
-impl Deref for Pubkey {
-  type Target = [u8];
-
-  fn deref(&self) -> &Self::Target {
-    &self.0
-  }
-}
-
 impl Display for Pubkey {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(f, "{}", bs58::encode(self.0).into_string())

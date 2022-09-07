@@ -1,9 +1,7 @@
-use libp2p::tcp::TcpTransport;
-
 mod episub;
 
 use {
-  crate::{keys::Keypair, message::Message, subscription::Subscription},
+  crate::primitives::{Keypair, Message, Subscription},
   episub::{Config, Episub, EpisubEvent, PeerAuthorizer},
   futures::StreamExt,
   libp2p::{
@@ -13,7 +11,7 @@ use {
     multihash::Multihash,
     noise,
     swarm::SwarmEvent,
-    tcp::GenTcpConfig,
+    tcp::{GenTcpConfig, TcpTransport},
     yamux::YamuxConfig,
     Multiaddr,
     PeerId,
