@@ -15,7 +15,7 @@ async def main():
                 "topic": "test_topic",
             }
         }))
-        print(await websocket.recv())
+        print(await websocket.recv()) 
         await websocket.send(json.dumps({
             "id": "2",
             "jsonrpc": "2.0",
