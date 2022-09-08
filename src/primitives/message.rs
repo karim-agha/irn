@@ -4,11 +4,12 @@ use {
   once_cell::sync::OnceCell,
   serde::{Deserialize, Serialize},
   sha3::{Digest, Sha3_256},
+  std::fmt::Debug,
 };
 
 /// Represents a single message relayed between two end-parties.
 /// The endpoints are either a dApp or a client wallet.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Message {
   sender: Multihash,
   topic: Multihash,
@@ -32,5 +33,16 @@ impl Addressable for Message {
       hasher.update(&self.content);
       multihash::Code::Sha3_256.wrap(&hasher.finalize()).unwrap()
     })
+  }
+}
+
+impl Debug for Message {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("Message")
+      .field("sender", &self.sender)
+      .field("topic", &self.topic)
+      .field("content", &self.content)
+      .field("hash", &self.multihash())
+      .finish()
   }
 }
