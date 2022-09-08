@@ -17,6 +17,12 @@ pub struct Message {
   hashcache: OnceCell<Multihash>,
 }
 
+/// This is the unique identifier of a message.
+///
+/// We use hashing contents to identify a message and use that identity for ACKs
+/// deduplication and in general referring to a particular message. Users have
+/// no way of specifying the id of the message they are sending without
+/// modifying its content.
 impl Addressable for Message {
   fn multihash(&self) -> Multihash {
     *self.hashcache.get_or_init(|| {
