@@ -56,6 +56,12 @@ impl MessageBus {
       .push(MessageBusEvent::SubscriptionDropped(topic));
   }
 
+  /// Called when some nodes ACKs delivering a message to a subscripion
+  /// it manages.
+  pub fn drop_message(&self, _hash: &Multihash) {
+    // todo
+  }
+
   /// Called whenever a message is gossiped through P2P and reaches the bus.
   /// If the targeted topic is maintained by this node, it will be immediately
   /// delivered to the subscriber, otherwise it will be placed in temporary

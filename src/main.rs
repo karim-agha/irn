@@ -106,8 +106,13 @@ async fn main() -> anyhow::Result<()> {
             info!("received message {msg:?}");
             bus.send_message(msg).await?;
           },
-          NetworkEvent::MessageAcknowledged(hash) => info!("received ack for {hash:?}"),
-          NetworkEvent::SubscriptionReceived(sub) => info!("received subscription {sub:?}"),
+          NetworkEvent::MessageAcknowledged(hash) => {
+            info!("received ack for {hash:?}");
+            bus.drop_message(&hash); // no need to retry it any longer
+          },
+          NetworkEvent::SubscriptionReceived(sub) => {
+            info!("received subscription {sub:?}");
+          },
         }
       },
 
@@ -135,7 +140,8 @@ async fn main() -> anyhow::Result<()> {
         match event {
           RpcEvent::Message(msg) => {
             info!("rpc-event message: {msg:?}");
-            network.gossip_message(msg)?;
+            network.gossip_message(msg.clone())?;
+            bus.send_message(msg).await?;
           }
           RpcEvent::Subscription(sub, socket) => {
             info!("rpc-event subscription: {sub:?}");
