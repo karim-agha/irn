@@ -12,7 +12,7 @@ async def main():
             "jsonrpc": "2.0",
             "method": "irn_subscribe",
             "params": {
-                "topic": "test_topic",
+                "topic": "12D3KooWJA96EVd8JeoLVbeDx7mHsVUc4sWCLQ55a7DpKmv9Cpzj",
             }
         }))
         print(await websocket.recv())

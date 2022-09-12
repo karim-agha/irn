@@ -40,7 +40,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - RUST_BACKTRACE=1
-    command: ./irn -n dev-1 --peer 172.40.1.2:44668 --rpc 8080
+    command: ./irn -n dev-1 --peer 172.40.1.2:44668 --rpc 8080 -v
     depends_on:
       node_0:
         condition: service_started

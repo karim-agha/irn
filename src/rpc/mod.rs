@@ -6,6 +6,7 @@ use {
   axum::extract::ws::WebSocket,
 };
 
+#[derive(Debug)]
 pub enum RpcEvent {
   Message(Message),
   Subscription(Subscription, WebSocket),

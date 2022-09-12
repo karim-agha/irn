@@ -1,7 +1,7 @@
 use {
   super::RpcEvent,
   crate::{
-    primitives::{Message, Pubkey, Subscription},
+    primitives::Pubkey,
     rpc::protocol::parse_request,
     storage::PersistentStorage,
   },
@@ -13,26 +13,22 @@ use {
     Router,
   },
   axum_extra::response::ErasedJson,
-  crossbeam::queue::SegQueue,
   either::Either,
   futures::Stream,
   serde_json::json,
   std::{net::SocketAddr, sync::Arc, task::Poll},
   tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
-  tracing::debug,
+  tracing::{debug, info, warn},
 };
 
 struct ServiceSharedState {
   identity: Pubkey,
-  events_out: SegQueue<RpcEvent>,
-  message_sender: UnboundedSender<Message>,
-  subscription_sender: UnboundedSender<Subscription>,
+  events_sender: UnboundedSender<RpcEvent>,
+  events_out: UnboundedReceiver<RpcEvent>,
 }
 
 pub struct RpcService {
   shared_state: Arc<ServiceSharedState>,
-  message_recv: UnboundedReceiver<Message>,
-  subscription_recv: UnboundedReceiver<Subscription>,
 }
 
 impl RpcService {
@@ -41,20 +37,18 @@ impl RpcService {
     _state: PersistentStorage,
     identity: Pubkey,
   ) -> Self {
-    let (message_sender, message_recv) = unbounded_channel();
-    let (subscription_sender, subscription_recv) = unbounded_channel();
+    let (events_sender, events_out) = unbounded_channel();
 
     let shared_state = Arc::new(ServiceSharedState {
       identity,
-      message_sender,
-      subscription_sender,
-      events_out: SegQueue::new(),
+      events_out,
+      events_sender,
     });
 
     let svc = Router::new()
       .route("/info", get(serve_info))
       .route("/rpc", get(serve_rpc))
-      .layer(Extension(shared_state.clone()));
+      .layer(Extension(Arc::clone(&shared_state)));
 
     addrs.iter().cloned().for_each(|addr| {
       let svc = svc.clone();
@@ -66,11 +60,7 @@ impl RpcService {
       });
     });
 
-    Self {
-      shared_state,
-      message_recv,
-      subscription_recv,
-    }
+    Self { shared_state }
   }
 }
 
@@ -99,12 +89,15 @@ async fn serve_rpc_socket(
   debug!("Starting a websocket");
   while let Some(msg) = socket.recv().await {
     if let Ok(ws::Message::Text(msg)) = msg {
-      if let Ok(request) = parse_request(&msg) {
-        match request {
+      match parse_request(&msg) {
+        Ok(request) => match request {
           // some end-party is publishing a new message
           Either::Left(message) => {
             debug!("Received {message:?} through WebSocket API");
-            state.events_out.push(RpcEvent::Message(message));
+            state
+              .events_sender
+              .send(RpcEvent::Message(message))
+              .unwrap();
           }
 
           // ome end-party is establishing a subscription on topic
@@ -112,14 +105,18 @@ async fn serve_rpc_socket(
           Either::Right(subscription) => {
             debug!("Received {subscription:?} through WebSocket API");
             state
-              .events_out
-              .push(RpcEvent::Subscription(subscription, socket));
+              .events_sender
+              .send(RpcEvent::Subscription(subscription, socket))
+              .unwrap();
             // subscription created, transfer ownership of the underlying
             // connection socket out of the RPC module into the message bus.
             break;
           }
-        }
+        },
+        Err(e) => warn!("Invalid request: {e:?}"),
       }
+    } else {
+      warn!("Invalid message format: {msg:?}");
     }
   }
 }
@@ -129,11 +126,18 @@ impl Stream for RpcService {
   type Item = RpcEvent;
 
   fn poll_next(
-    self: std::pin::Pin<&mut Self>,
-    _: &mut std::task::Context<'_>,
+    mut self: std::pin::Pin<&mut Self>,
+    cx: &mut std::task::Context<'_>,
   ) -> std::task::Poll<Option<Self::Item>> {
-    if let Some(event) = self.shared_state.events_out.pop() {
-      return Poll::Ready(Some(event));
+    if let Some(shared_state) = Arc::get_mut(&mut self.shared_state) {
+      if let Poll::Ready(Some(event)) = shared_state.events_out.poll_recv(cx) {
+        info!("popping an event from RPC Service: {event:?}");
+        return Poll::Ready(Some(event));
+      } else {
+        warn!("Nothing in RPC events queue");
+      }
+    } else {
+      warn!("Can't get mut arc");
     }
     Poll::Pending
   }

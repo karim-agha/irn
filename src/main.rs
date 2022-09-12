@@ -104,7 +104,7 @@ async fn main() -> anyhow::Result<()> {
         match event {
           NetworkEvent::MessageReceived(msg) => {
             info!("received message {msg:?}");
-            bus.send_message(msg).await?;
+            //bus.send_message(msg).await?;
           },
           NetworkEvent::MessageAcknowledged(hash) => {
             info!("received ack for {hash:?}");
@@ -137,11 +137,12 @@ async fn main() -> anyhow::Result<()> {
 
       // RPC WebSocket API
       Some(event) = apisvc.next() => {
+        info!("received an event from apisvc: {event:?}");
         match event {
           RpcEvent::Message(msg) => {
             info!("rpc-event message: {msg:?}");
             network.gossip_message(msg.clone())?;
-            bus.send_message(msg).await?;
+            // bus.send_message(msg).await?;
           }
           RpcEvent::Subscription(sub, socket) => {
             info!("rpc-event subscription: {sub:?}");
