@@ -11,11 +11,20 @@ use {
 /// The endpoints are either a dApp or a client wallet.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Message {
-  sender: Multihash,
-  topic: Multihash,
-  content: Vec<u8>,
+  pub topic: Multihash,
+  pub content: Vec<u8>,
   #[serde(skip)]
   hashcache: OnceCell<Multihash>,
+}
+
+impl Message {
+  pub fn new(topic: Multihash, content: Vec<u8>) -> Self {
+    Self {
+      topic,
+      content,
+      hashcache: OnceCell::new(),
+    }
+  }
 }
 
 /// This is the unique identifier of a message.
@@ -28,7 +37,6 @@ impl Addressable for Message {
   fn multihash(&self) -> Multihash {
     *self.hashcache.get_or_init(|| {
       let mut hasher = Sha3_256::new();
-      hasher.update(&self.sender.to_bytes());
       hasher.update(&self.topic.to_bytes());
       hasher.update(&self.content);
       multihash::Code::Sha3_256.wrap(&hasher.finalize()).unwrap()
@@ -39,7 +47,6 @@ impl Addressable for Message {
 impl Debug for Message {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     f.debug_struct("Message")
-      .field("sender", &self.sender)
       .field("topic", &self.topic)
       .field("content", &self.content)
       .field("hash", &self.multihash())

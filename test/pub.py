@@ -21,7 +21,7 @@ async def main():
             "jsonrpc": "2.0",
             "method": "irn_publish",
             "params": {
-                "topic": "test_topic",
+                "topic": "12D3KooWJA96EVd8JeoLVbeDx7mHsVUc4sWCLQ55a7DpKmv9Cpzj",
                 "message": "hello world!",
                 "ttl": 100,
             }

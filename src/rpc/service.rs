@@ -17,7 +17,7 @@ use {
   either::Either,
   futures::Stream,
   serde_json::json,
-  std::{collections::VecDeque, net::SocketAddr, sync::Arc, task::Poll},
+  std::{net::SocketAddr, sync::Arc, task::Poll},
   tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
   tracing::debug,
 };
@@ -111,7 +111,12 @@ async fn serve_rpc_socket(
           // and awaiting incoming messages
           Either::Right(subscription) => {
             debug!("Received {subscription:?} through WebSocket API");
-            state.events_out.push(RpcEvent::Subscription(subscription));
+            state
+              .events_out
+              .push(RpcEvent::Subscription(subscription, socket));
+            // subscription created, transfer ownership of the underlying
+            // connection socket out of the RPC module into the message bus.
+            break;
           }
         }
       }

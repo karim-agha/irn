@@ -1,7 +1,9 @@
 use {
-  crate::{optstream::OptionalStreamExt, rpc::RpcEvent},
+  crate::{bus::MessageBusEvent, optstream::OptionalStreamExt, rpc::RpcEvent},
+  bus::MessageBus,
   clap::Parser,
   cli::CliOpts,
+  futures::StreamExt,
   network::{Network, NetworkEvent},
   rpc::RpcService,
   storage::PersistentStorage,
@@ -9,6 +11,7 @@ use {
   tracing_subscriber::{filter::filter_fn, prelude::*},
 };
 
+mod bus;
 mod cli;
 mod network;
 mod optstream;
@@ -74,6 +77,13 @@ async fn main() -> anyhow::Result<()> {
     network.connect(peer)?;
   }
 
+  // routes messages to topics on the local node
+  // if the subscription is managed by this node,
+  // otherwise store the message until a new subscription
+  // is established for its topic or the message is ACKd by
+  // some other node as delivered.
+  let mut bus = MessageBus::new();
+
   // the per-node local storage, responsible for
   // storing data that should survive crashes, such
   // as the mailbox
@@ -92,11 +102,31 @@ async fn main() -> anyhow::Result<()> {
       // P2P networking
       Some(event) = network.poll() => {
         match event {
-          NetworkEvent::MessageReceived(msg) => info!("received message {msg:?}"),
+          NetworkEvent::MessageReceived(msg) => {
+            info!("received message {msg:?}");
+            bus.send_message(msg).await?;
+          },
           NetworkEvent::MessageAcknowledged(hash) => info!("received ack for {hash:?}"),
           NetworkEvent::SubscriptionReceived(sub) => info!("received subscription {sub:?}"),
         }
       },
+
+      // Message Bus
+      Some(event) = bus.next() => {
+        match event {
+          MessageBusEvent::MessageDelivered(hash) => {
+            info!("Message {hash:?} delivered");
+            network.gossip_ack(hash)?;
+          },
+          MessageBusEvent::SubscriptionCreated(topic) => {
+            info!("topic {topic:?} created");
+            network.gossip_subscription(topic)?;
+          }
+          MessageBusEvent::SubscriptionDropped(topic) => {
+            info!("topic {topic:?} dropped");
+          }
+        }
+      }
 
       // optional services:
 
@@ -107,9 +137,9 @@ async fn main() -> anyhow::Result<()> {
             info!("rpc-event message: {msg:?}");
             network.gossip_message(msg)?;
           }
-          RpcEvent::Subscription(sub) => {
+          RpcEvent::Subscription(sub, socket) => {
             info!("rpc-event subscription: {sub:?}");
-            network.gossip_subscription(sub)?;
+            bus.create_subscription(sub, socket);
           }
         }
       }

@@ -77,6 +77,7 @@ pub enum NetworkEvent {
 pub enum NetworkCommand {
   Connect(Multiaddr),
   GossipMessage(Message),
+  GossipACK(Multihash),
   GossipSubscription(Subscription),
 }
 
@@ -191,6 +192,14 @@ impl Network {
                   error!("Dialing peer {addr} failed: {e}");
                 }
               }
+              NetworkCommand::GossipACK(msghash) => {
+                swarm
+                .behaviour_mut()
+                .publish(
+                  &format!("/{}/ack", network_id),
+                  bincode::serialize(&msghash).expect("failed to serialize message"))
+                .unwrap();
+              }
               NetworkCommand::GossipMessage(msg) => {
                 swarm
                 .behaviour_mut()
@@ -237,6 +246,13 @@ impl Network {
     sub: Subscription,
   ) -> Result<(), SendError<NetworkCommand>> {
     self.netout.send(NetworkCommand::GossipSubscription(sub))
+  }
+
+  pub fn gossip_ack(
+    &mut self,
+    hash: Multihash,
+  ) -> Result<(), SendError<NetworkCommand>> {
+    self.netout.send(NetworkCommand::GossipACK(hash))
   }
 
   pub async fn poll(&mut self) -> Option<NetworkEvent> {
