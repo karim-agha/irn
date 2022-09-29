@@ -103,3 +103,24 @@ impl Stream for MessageBus {
     Poll::Pending
   }
 }
+
+
+macro_rules! handle {
+  ($event:ident, $network: ident) => {
+    match $event {
+      MessageBusEvent::MessageDelivered(hash) => {
+        info!("Message {hash:?} delivered");
+        $network.gossip_ack(hash)?;
+      }
+      MessageBusEvent::SubscriptionCreated(topic) => {
+        info!("topic {topic:?} created");
+        $network.gossip_subscription(topic)?;
+      }
+      MessageBusEvent::SubscriptionDropped(topic) => {
+        info!("topic {topic:?} dropped");
+      }
+    }
+  };
+}
+
+pub(crate) use handle;

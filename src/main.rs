@@ -47,58 +47,6 @@ fn initialize_logging(loglevel: Level) {
     .init();
 }
 
-macro_rules! handle_network {
-  ($event:ident, $bus: ident) => {
-    match $event {
-      NetworkEvent::MessageReceived(msg) => {
-        info!("received message {msg:?}");
-        // bus.send_message(msg).await?;
-      }
-      NetworkEvent::MessageAcknowledged(hash) => {
-        info!("received ack for {hash:?}");
-        $bus.drop_message(&hash); // no need to retry it any longer
-      }
-      NetworkEvent::SubscriptionReceived(sub) => {
-        info!("received subscription {sub:?}");
-      }
-    }
-  };
-}
-
-macro_rules! handle_bus {
-  ($event:ident, $network: ident) => {
-    match $event {
-      MessageBusEvent::MessageDelivered(hash) => {
-        info!("Message {hash:?} delivered");
-        $network.gossip_ack(hash)?;
-      }
-      MessageBusEvent::SubscriptionCreated(topic) => {
-        info!("topic {topic:?} created");
-        $network.gossip_subscription(topic)?;
-      }
-      MessageBusEvent::SubscriptionDropped(topic) => {
-        info!("topic {topic:?} dropped");
-      }
-    }
-  };
-}
-
-macro_rules! handle_rpc {
-  ($event:ident, $bus: ident, $network: ident) => {
-    match $event {
-      RpcEvent::Message(msg) => {
-        info!("rpc-event message: {msg:?}");
-        $network.gossip_message(msg.clone())?;
-        // bus.send_message(msg).await?;
-      }
-      RpcEvent::Subscription(sub, socket) => {
-        info!("rpc-event subscription: {sub:?}");
-        $bus.create_subscription(sub, socket);
-      }
-    }
-  };
-}
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
   let opts = CliOpts::parse();
@@ -149,11 +97,11 @@ async fn main() -> anyhow::Result<()> {
   loop {
     tokio::select! {
       // core services:
-      Some(event) = network.poll() => handle_network!(event, bus),
-      Some(event) = bus.next() => handle_bus!(event, network),
+      Some(event) = network.poll() => network::handle!(event, bus),
+      Some(event) = bus.next() => bus::handle!(event, network),
 
       // optional services:
-      Some(event) = apisvc.next() => handle_rpc!(event, bus, network)
+      Some(event) = apisvc.next() => rpc::handle!(event, bus, network)
     }
   }
 }

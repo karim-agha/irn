@@ -259,3 +259,24 @@ impl Network {
     self.netin.recv().await
   }
 }
+
+// thos modules's role in the main event loop.
+macro_rules! handle {
+  ($event:ident, $bus: ident) => {
+    match $event {
+      NetworkEvent::MessageReceived(msg) => {
+        info!("received message {msg:?}");
+        // bus.send_message(msg).await?;
+      }
+      NetworkEvent::MessageAcknowledged(hash) => {
+        info!("received ack for {hash:?}");
+        $bus.drop_message(&hash); // no need to retry it any longer
+      }
+      NetworkEvent::SubscriptionReceived(sub) => {
+        info!("received subscription {sub:?}");
+      }
+    }
+  };
+}
+
+pub(crate) use handle;
