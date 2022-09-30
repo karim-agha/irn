@@ -10,9 +10,9 @@ use {
 };
 
 pub enum MessageBusEvent {
-  MessageDelivered(Multihash),
+  _MessageDelivered(Multihash),
   SubscriptionCreated(Multihash),
-  SubscriptionDropped(Multihash),
+  _SubscriptionDropped(Multihash),
 }
 
 #[derive(Error, Debug)]
@@ -49,11 +49,11 @@ impl MessageBus {
 
   /// Occurs when the WebSocket connection through RPC is closed
   /// for whatever reason.
-  pub fn drop_subscription(&self, topic: Multihash) {
+  pub fn _drop_subscription(&self, topic: Multihash) {
     self.topics.remove(&topic);
     self
       .events_out
-      .push(MessageBusEvent::SubscriptionDropped(topic));
+      .push(MessageBusEvent::_SubscriptionDropped(topic));
   }
 
   /// Called when some nodes ACKs delivering a message to a subscripion
@@ -67,7 +67,7 @@ impl MessageBus {
   /// delivered to the subscriber, otherwise it will be placed in temporary
   /// storage until either it expires or a subscription with the target topic
   /// is created.
-  pub async fn send_message(&self, message: Message) -> Result<(), SendError> {
+  pub async fn _send_message(&self, message: Message) -> Result<(), SendError> {
     if let Some(mut socket) = self.topics.get_mut(&message.topic) {
       // the message is sent to a subscription managed by this node.
       socket
@@ -80,7 +80,7 @@ impl MessageBus {
       // delivered
       self
         .events_out
-        .push(MessageBusEvent::MessageDelivered(message.multihash()));
+        .push(MessageBusEvent::_MessageDelivered(message.multihash()));
     } else {
       // todo: implement persisting a message for some time (TTL)
     }
@@ -108,7 +108,7 @@ impl Stream for MessageBus {
 macro_rules! handle {
   ($event:ident, $network: ident) => {
     match $event {
-      MessageBusEvent::MessageDelivered(hash) => {
+      MessageBusEvent::_MessageDelivered(hash) => {
         info!("Message {hash:?} delivered");
         $network.gossip_ack(hash)?;
       }
@@ -116,7 +116,7 @@ macro_rules! handle {
         info!("topic {topic:?} created");
         $network.gossip_subscription(topic)?;
       }
-      MessageBusEvent::SubscriptionDropped(topic) => {
+      MessageBusEvent::_SubscriptionDropped(topic) => {
         info!("topic {topic:?} dropped");
       }
     }

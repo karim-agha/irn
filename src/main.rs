@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
   // Networking runs on its own separate thread,
   // and emits events by calling .poll()
   let mut network = Network::new(
-    opts.network_id.clone(),
+    opts.network_id.clone(), // our network id
     opts.secret.clone(),
     opts.listen_multiaddrs().into_iter(), // our adresses
     opts.peers(),                         // bootstrap peers.

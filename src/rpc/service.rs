@@ -106,7 +106,7 @@ async fn serve_rpc_socket(
             debug!("Received {subscription:?} through WebSocket API");
             state
               .events_sender
-              .send(RpcEvent::Subscription(subscription, socket))
+              .send(RpcEvent::_Subscription(subscription, socket))
               .unwrap();
             // subscription created, transfer ownership of the underlying
             // connection socket out of the RPC module into the message bus.

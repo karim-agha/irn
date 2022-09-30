@@ -9,7 +9,7 @@ use {
 #[derive(Debug)]
 pub enum RpcEvent {
   Message(Message),
-  Subscription(Subscription, WebSocket),
+  _Subscription(Subscription, WebSocket),
 }
 
 macro_rules! handle {
@@ -20,7 +20,7 @@ macro_rules! handle {
         $network.gossip_message(msg.clone())?;
         // bus.send_message(msg).await?;
       }
-      RpcEvent::Subscription(sub, socket) => {
+      RpcEvent::_Subscription(sub, socket) => {
         info!("rpc-event subscription: {sub:?}");
         $bus.create_subscription(sub, socket);
       }

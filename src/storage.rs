@@ -15,7 +15,7 @@ pub enum Error {
 pub struct PersistentStorage {}
 
 impl PersistentStorage {
-  pub fn new(directory: PathBuf) -> Result<Self, Error> {
+  pub fn new(_: PathBuf) -> Result<Self, Error> {
     Ok(Self {})
   }
 }
