@@ -67,15 +67,9 @@ async fn main() -> anyhow::Result<()> {
     opts.network_id.clone(),
     opts.secret.clone(),
     opts.listen_multiaddrs().into_iter(),
+    opts.peers(),
   )
   .await?;
-
-  // Connect to all known bootstrap nodes.
-  // Bootstrap nodes will then introduce the current node
-  // to the rest of the p2p mesh.
-  for peer in opts.peers() {
-    network.connect(peer)?;
-  }
 
   // routes messages to topics on the local node
   // if the subscription is managed by this node,

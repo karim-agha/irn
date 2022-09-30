@@ -91,6 +91,7 @@ impl Network {
     network_id: String,
     keypair: Keypair,
     listenaddrs: impl Iterator<Item = Multiaddr>,
+    bootstrap: Vec<Multiaddr>,
   ) -> std::io::Result<Self> {
     let id = identity::Keypair::Ed25519(
       identity::ed25519::SecretKey::from_bytes(
@@ -221,17 +222,18 @@ impl Network {
         }
       }
     });
+
+    // Connect to all known bootstrap nodes.
+    // Bootstrap nodes will then introduce the current node
+    // to the rest of the p2p mesh.
+    for addr in bootstrap {
+      netout_tx.send(NetworkCommand::Connect(addr)).unwrap();
+    }
+
     Ok(Self {
       netin: netin_rx,
       netout: netout_tx,
     })
-  }
-
-  pub fn connect(
-    &mut self,
-    addr: Multiaddr,
-  ) -> Result<(), SendError<NetworkCommand>> {
-    self.netout.send(NetworkCommand::Connect(addr))
   }
 
   pub fn gossip_message(
