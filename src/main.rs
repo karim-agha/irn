@@ -66,8 +66,8 @@ async fn main() -> anyhow::Result<()> {
   let mut network = Network::new(
     opts.network_id.clone(),
     opts.secret.clone(),
-    opts.listen_multiaddrs().into_iter(),
-    opts.peers(),
+    opts.listen_multiaddrs().into_iter(), // our adresses
+    opts.peers(),                         // bootstrap peers.
   )
   .await?;
 
